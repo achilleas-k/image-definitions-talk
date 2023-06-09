@@ -2,9 +2,12 @@
 
 Presentation for [DevConf.cz][devconf] 2023.
 
-Talk URL: https://devconfcz2023.sched.com/event/1MYkT/if-you-wish-to-build-a-linux-image-from-scratch
+- [Conference schedule][schedule]
+- [Talk info and abstract][abstract]
 
 [devconf]: https://www.devconf.info/cz/
+[schedule]: https://devconfcz2023.sched.com/
+[abstract]: https://devconfcz2023.sched.com/event/1MYkT
 
 ## Presentation slides
 
