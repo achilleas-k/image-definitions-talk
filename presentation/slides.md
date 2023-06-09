@@ -1,7 +1,7 @@
 ---
 title: If you wish to build a Linux image from scratch...
 theme: black
-css: ../style.css
+css: presentation/style.css
 revealOptions:
   transition: 'none'
 
