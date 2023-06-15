@@ -11,7 +11,7 @@ revealOptions:
 
 ... you must first invent the universe of image definitions
 
-> Achilleas Koutsou
+Achilleas Koutsou
 
 2023-06-16
 
@@ -45,37 +45,28 @@ The point of this talk:
 ### It builds images
 
 Notes:
-- A look at how image builder works and what it's made of.
+- A look at how image builder works and what it looks like.
+- I'll talk a bit about how we build images but the focus of this talk will be on the way we define images.
 
 ---
 
 ## Image builder
 
-```
-
-           composer cli   image builder   cockpit composer
-           ————————————   —————————————   ————————————————
-                ⬇️               ⬇️                ⬇️
-                ——————————————————————————————————
-                         osbuild composer
-                         ————————————————
-                                ⬇️
-                             ———————
-                             osbuild
-```
+![](./screenshot-imagetype.png)
 
 Notes:
-- TODO: Remove this or move to the end
-- This is the rough structure of the image builder stack.  At the top we have user interfaces, like the CLI, cockpit composer (a plugin for cockpit), and the image builder service that runs in console.redhat.com (our hosted service).
-- I'll talk a bit about how osbuild works (the bottom part) but the focus of this talk will be almost entirely on the way we define images, which happens in osbuild-composer (the middle part).
-- I might mention how the concepts discussed here affect the user interfaces.
-TODO: consider adding `images` between osbuild and composer
+- First of all, this is what image builder looks like in console.redhat.com
+- The screenshot shows the first step of the image creation wizard where the user selects the target platform, which defines the image type that will be built, in this case, an AMI for AWS.
 
 ---
 
-## osbuild
+## Image builder
 
-SCREENSHOT OF IB WITH NGINX (example)
+![](./screenshot-nginx.png)
+
+Notes:
+- And here is the image creation wizard about halfway through the sequence of steps with nginx selected as an additional package to include in the image.
+- What I'd like to do is explain how these options (and all the others like them) affect the process of creating an image and how we might be thinking about these configurations in the future.
 
 ---
 
@@ -92,12 +83,18 @@ An osbuild manifest
       "stages": [
         {
           "type": "org.osbuild.rpm",
-          "inputs": { ... },
-          "options": { ... }
+          "inputs": {
+            "packages": { ... }
+          }
         },
         {
           "type": "org.osbuild.selinux",
-          "options": { ... }
+          "options": {
+            "file_contexts": "etc/selinux/targeted/contexts/files/file_contexts",
+            "labels": {
+              "/usr/bin/cp": "system_u:object_r:install_exec_t:s0"
+            }
+          }
         }
       ]
     },
@@ -106,8 +103,23 @@ An osbuild manifest
       "build": "name:build",
       "stages": [
         {
+          "type": "org.osbuild.kernel-cmdline",
+          "options": {
+            "root_fs_uuid": "6e4ff95f-f662-45ee-a82a-bdf44a2d0b75",
+            "kernel_opts": "ro no_timer_check console=ttyS0,115200n8 biosdevname=0 net.ifnames=0"
+          }
+        },
+        {
           "type": "org.osbuild.rpm",
-          "inputs": { ... },
+          "inputs": {
+            "packages": { ... }
+          }
+        },
+        {
+          "type": "org.osbuild.fix-bls",
+          "options": {
+            "prefix": ""
+          }
         },
         {
           "type": "org.osbuild.locale",
@@ -125,16 +137,6 @@ An osbuild manifest
           "type": "org.osbuild.timezone",
           "options": {
             "zone": "UTC"
-          }
-        },
-        {
-          "type": "org.osbuild.users",
-          "options": {
-            "users": {
-              "achilleas": {
-                "key": "..."
-              }
-            }
           }
         },
         {
@@ -188,7 +190,8 @@ An osbuild manifest
               "cloud-init.service",
               "cloud-config.service",
               "cloud-final.service",
-              "cloud-init-local.service"
+              "cloud-init-local.service",
+              "cloud-init.service"
             ],
             "default_target": "multi-user.target"
           }
@@ -208,7 +211,7 @@ An osbuild manifest
         {
           "type": "org.osbuild.truncate",
           "options": {
-            "filename": "disk.img",
+            "filename": "image.raw",
             "size": "5368709120"
           }
         },
@@ -249,7 +252,7 @@ An osbuild manifest
             "device": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "lock": true
               }
             }
@@ -264,7 +267,7 @@ An osbuild manifest
             "device": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "start": 4096,
                 "size": 409600,
                 "lock": true
@@ -282,7 +285,7 @@ An osbuild manifest
             "device": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "start": 413696,
                 "size": 1024000,
                 "lock": true
@@ -300,7 +303,7 @@ An osbuild manifest
             "device": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "start": 1437696,
                 "size": 9048031,
                 "lock": true
@@ -331,7 +334,7 @@ An osbuild manifest
             "boot": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "start": 413696,
                 "size": 1024000
               }
@@ -339,7 +342,7 @@ An osbuild manifest
             "boot.efi": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "start": 4096,
                 "size": 409600
               }
@@ -347,7 +350,7 @@ An osbuild manifest
             "root": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "start": 1437696,
                 "size": 9048031
               }
@@ -377,7 +380,7 @@ An osbuild manifest
         {
           "type": "org.osbuild.grub2.inst",
           "options": {
-            "filename": "disk.img",
+            "filename": "image.raw",
             "platform": "i386-pc",
             "location": 2048,
             "core": {
@@ -394,42 +397,16 @@ An osbuild manifest
           }
         }
       ]
-    },
-    {
-      "name": "qcow2",
-      "build": "name:build",
-      "stages": [
-        {
-          "type": "org.osbuild.qemu",
-          "inputs": {
-            "image": {
-              "type": "org.osbuild.files",
-              "origin": "org.osbuild.pipeline",
-              "references": {
-                "name:image": {
-                  "file": "disk.img"
-                }
-              }
-            }
-          },
-          "options": {
-            "filename": "disk.qcow2",
-            "format": {
-              "type": "qcow2",
-              "compat": "1.1"
-            }
-          }
-        }
-      ]
     }
-  ]
+  ],
+  "sources": { ... }
 }
 ```
 
 
 Notes:
-TODO: Change the manifest to be F38 x86 AWS nginx (our example)
 - osbuild is a command line utility that takes a manifest and returns one or more filesystem trees.
+- It is the lowest level part of the project that does all the work of actually building an OS artifact.
 - osbuild consumes a manifest, a big json structure that describes some sources (e.g., rpm urls) and a series of pipelines.
 - A pipeline is a series of steps called stages, each of which modifies a filesystem tree in different ways.
 - osbuild has no knowledge of distributions or workloads.  It simply and stupidly executes the stages as described and returns the filesystem trees that are specified on the command line.
@@ -449,30 +426,35 @@ Pipeline: os                         org.osbuild.mkfs.fat
   org.osbuild.rpm                    org.osbuild.mkfs.ext4
   org.osbuild.fix-bls                org.osbuild.copy
   org.osbuild.locale                 org.osbuild.grub2.inst
-  org.osbuild.hostname             Pipeline: qcow2
-  org.osbuild.timezone               org.osbuild.qemu
-  org.osbuild.users
+  org.osbuild.hostname
+  org.osbuild.timezone
   org.osbuild.fstab
   org.osbuild.grub2
+  org.osbuild.nginx.conf
   org.osbuild.systemd
   org.osbuild.selinux
 ```
 
 Notes:
-- This is what it looks like simplified and the stages are like this.
-TODO: Change the manifest to be F38 x86 AWS nginx (our example)
+- This is a simplified look of the json object in the previous slide.
+- You can see each pipeline broken down to a series of stages.
+- Most of these stages have pretty self-explanatory names: if it looks like the name of a shell script, that's probably what it does
 
 ---
 
 ## osbuild
 
-- org.osbuild.rpm: install packages to a tree
-- org.osbuild.selinux: set selinux file contexts
-- org.osbuild.hostname: write /etc/hostname
-- org.osbuild.sfdisk: partition a device
+- `org.osbuild.rpm`: install packages to a tree
+- `org.osbuild.cloud-init`: configure cloud-init
+- `org.osbuild.systemd`: enable services
+- `org.osbuild.grub2`: configure bootloader
+- `org.osbuild.grub2.inst`: install bootloader
+- `org.osbuild.nginx.conf`: configure nginx
 
 Notes:
-TODO: add the important stages that we will discuss in the example later (grub2 cloud-init etc)
+- For example, this is what these 6 stages are used for.
+- In general, most stages either write a file (for configuration) or execute a command with specific options.
+- The nice thing about our stages is that they define their inputs rather strictly and don't expose the full
 
 ---
 
@@ -499,37 +481,59 @@ Note:
   - and the image should be bootable (usable).
 - The easy way to guarantee this is to restrict user choice: the smaller the configuration space, the fewer things we have to think about and test.
 - But the more we restrict user choice, the less useful our project becomes.
+  - If we can only build a handful or a couple of image configurations, it would probably very reliable and easy to test all configurations, but it wouldn't be very useful.
+  - If we allow any kind of configuration under the sun, that might be extremely powerful in terms of what can be achieved, but it would probably create a lot of garbage from invalid configurations.
 
 ---
 
 ## Defining image types
 
-1. OS distribution
-2. Hardware architecture
-3. Target environment
+(distribution, platform, environment)
+
+  \+
+
+user customizations
 
 Notes:
 - When we talk about the images that we build, we refer to an image file or archive that contains an operating system tree.
 - An **image type** is a predefined image configuration.
-- Ignoring any user customizations, the base configuration needs to specify at the very least the OS distribution, the hardware architecture, and the target environment.
-- For example:
-  - Fedora 38 x86 for azure
-  - RHEL 9 aarch64 for aws
+- The base configuration needs to specify at the very least the OS distribution, the platform or hardware architecture, and the target environment (the three elements at the top)
+- Additionally, a user can add extra packages and tweak a few configuration options.
+  - This is the only real control we give users to define their images after they have selected a base image configuration (image type).
+
 
 ---
 
 ## Defining image types
 
-1. OS distribution: Base packages and repositories
-2. Hardware architecture: Package/repository architecture, bootloader, firmware
-3. Target environment: Packages, configurations
+(Fedora 38, x86_64, AWS EC2)
+
+  \+
+
+nginx
 
 Notes:
-- An image type is a configuration of these three choices.
-- Considering the osbuild stages we saw earlier, each choice affects stages and stage options.
-  - The distribution defines a base set of package names and repositories (content sources)
-  - The architecture defines the architecture of those packages (and repositories) as well as extra packages and configurations, like specific firmware, bootloader configs, etc.
-  - The environment adds packages, like cloud agents, and modifies configurations, like firewall rules.
+- For example:
+  - Fedora 38 x86 for aws with nginx, or
+  - RHEL 9 aarch64 for azure with an extra 20 GiB `/opt` partition
+- To repeat myself a bit: in code as well as for the user interface (to an extent), the first three components are combined in a very static manner.
+  - For example, if we never explicitly added an image type that is a Fedora 38 aarch64 for azure, it would not be available to build, even if it's a perfectly valid configuration.
+
+---
+
+## Defining image types
+
+1. Distribution: Base packages and repositories
+2. Platform: Package/repository architecture, bootloader, firmware
+3. Environment: Packages, configurations
+
+Notes:
+- An image type currently is a static configuration of these three variables.  However, each choice has a specific effect on the image building process and the final artifact.
+- Considering the osbuild stages we saw earlier, each one affects stages and stage options.
+  - Distro a base set of package names and repositories (content sources)
+  - Platform: the architecture of those packages (and repositories) as well as extra packages and configurations
+  - Environment: adds packages, like cloud agents, and modifies configurations
+- We would like to move away from static configurations and towards defining these effects so that any valid choice can be made available.
 - It's important that our image definitions abstract away any knowledge of the manifest, pipelines, and stages.
 
 ---
@@ -552,12 +556,14 @@ Notes:
 
 
 Notes:
-- On top of the three choices we've seen already, we add another one that represents what the image is intended for, the workload.
+- Consider the three components we mentioned earlier that define our static image types
+- We add another one that represents what the image is intended for, the workload.
 - Overall we have:
   - Distro: as before.
-  - Platform: a generalisation of the architecture we saw earlier, which can include variations or more specific choices, like firmware packages for specific devices.
+  - Platform: the architecture we saw earlier (but also variations or more specific hardware devices)
   - Environment: also as before.
   - Workload: the intended use of the image, which can be user defined or predefined by the project for common workloads (e.g., a _web server_ workload which contains packages, firewall rules, and sane defaults for running a web service).
+    - Think of the workload as the things you would do when deploying and provisioning a base image.
 - We can go through a scenario with these components and see how the abstractions have concrete effects on the content and stages for the final image.
 
 ---
@@ -565,9 +571,9 @@ Notes:
 ## Image definition components
 
 1. Distribution: Fedora 38
-    - Repositories: All Fedora 38 repos
-    - Packages: `@core`
-    - Stages: Fedora 38 build environment
+    - Repositories: **All Fedora 38 repos**
+    - Packages: **`@core`**
+    - Stages: **Fedora 38 build environment**
 
 Notes:
 - We start by selecting a distribution that gives us a set of repositories and packages.
@@ -576,10 +582,10 @@ Notes:
 
 ## Image definition components
 
-2. Architecture: x86_64
+2. Architecture: **x86_64**
     - Repositories: Fedora 38 **x86_64**
-    - Packages: `@core` + `grub2-efi-x64` + `shim-x64`
-    - Stages: Fedora 38 build environment + grub2 config + grub2 install
+    - Packages: `@core` + **`grub2-efi-x64`** + **`shim-x64`**
+    - Stages: Fedora 38 build environment + **grub2 config** + **grub2 install**
 
 Notes:
 - Then we select the architecture which narrows down the repositories and adds boot-related packages as well as extra stages to configure and install the bootloader
@@ -588,10 +594,10 @@ Notes:
 
 ## Image definition components
 
-3. Environment: AWS EC2
-    - Repositories: Fedora 38 **x86_64**
-    - Packages: `@core` + `grub2-efi-x64` + `shim-x64` + `@Fedora Cloud Server` + `cloud-init`
-    - Stages: build environment + grub2 config + grub2 install + systemd (enable cloud-init)
+3. Environment: **AWS EC2**
+    - Repositories: Fedora 38 x86_64
+    - Packages: `@core` + `grub2-efi-x64` + `shim-x64` + **`@Fedora Cloud Server`** + **`cloud-init`**
+    - Stages: build environment + grub2 config + grub2 install + **systemd (enable cloud-init)**
 
 Notes:
 - Selecting the AWS EC2 environment adds the cloud server packages and a systemd stage to enable the cloud-init service on boot, which takes care of resizing partitions and creating users on first boot through the AWS cloud console.
@@ -600,13 +606,27 @@ Notes:
 
 ## Image definition components
 
-4. Workload: Web server
-    - Repositories: Fedora 38 **x86_64**
-    - Packages: `@core` + `grub2-efi-x64` + `shim-x64` + `@Fedora Cloud Server` + `cloud-init` + `nginx`
-    - Stages: build environment + grub2 config + grub2 install + systemd (enable cloud-init) + nginx config
+4. Workload: **Web server**
+    - Repositories: Fedora 38 x86_64
+    - Packages: `@core` + `grub2-efi-x64` + `shim-x64` + `@Fedora Cloud Server` + `cloud-init` + **`nginx`**
+    - Stages: build environment + grub2 config + grub2 install + systemd (enable cloud-init + **nginx**) + **nginx config**
 
 Notes:
-- And finally, selecting the web server workload adds a web server, nginx, and the appropriate stage to configure it if necessary.
+- And finally, selecting the web server workload adds the nginx package, the nginx service to the systemd stage to enable it, and the nginx config stage to create the configuration file.
+
+---
+
+## Image definition components
+
+1. Distribution
+2. Platform
+3. Environment
+4. Workload
+
+
+Notes:
+- And so if the effect of each one of these components on the image creation is well defined, we can freely combine them.
+- Instead of explicitly defining valid combinations, we can encode the (somewhat) free combination of components and restrict the configuration matrix to the space of known valid combinations, by removing the ones we know are invalid.
 
 ---
 
@@ -620,13 +640,19 @@ Notes:
 
 ## User experience
 
-Current state
-1. Select distribution
-2. Select image type: `guest-image`, `aws`, `azure`, `gcp`, ...
+### Current state
+
+(distribution, platform, environment)
+
+  \+
+
+user customizations
 
 Notes:
 - Up until now, the experience has been pretty straightforward
-- Users can select a distribution version, build x86 (on the service) or the host architecture (on prem), and then select an image type.
+- Users can select a distribution version, build x86 (on the service) or the host architecture (on prem), and then select an target environment if (and only if) the combination of the three options is already defined as an image type.
+- The identity of the image is, essentially, the static image type and the rest is just small customizations
+- Our new setup lets us put equal weight on all the components in code.
 
 ---
 
@@ -635,17 +661,27 @@ Notes:
 Expose all the components
 
 Notes:
-- But why not just expose all the components instead?
-- Meaning: Select a distribution version (like now), select an environment
+- So why not just expose all the components instead?
+- Meaning: Select a distribution version (like now), a platform (if possible), select an environment, and then a workload or let the user configure their own.
+- Abstract from the user the individual effects of each choice if it's not necessary for their workload:
+  - For example, if a user wants to run an aarch64 image on azure, they shouldn't care how the manifest changes to accommodate this
+  - Nor should they care if the bootloader is configured differently
+- Don't flatten the list of image types, but instead expose the whole configuration matrix and have well defined interactions between components, so that we can reason and think about them and know whether they work or not.
 
 ---
 
+## User experience
+
+Expose all the components?
+
 Notes:
-Feedback from initial demo:
-    - The example was the most entertaining part
-    - Use the example throughout the talk
-    - At the end: Call to action
-        - This his how we WANT TO think about this stuff.  What do you think???  Does this make sense?  Is there something that we missed?
-    - Go low to high on specific example
-    - Start with screenshot of cockpit composer with the F38 web server example
-    - Say "We have high level tools that are available for the users", but don't mention the components
+- At least this is how we want to think about these things.
+- And we want to ask you, the users (or potential users), if this makes sense?
+- Is there something we missed?  Is there a some use cases that a component-based setup like the one I presented doesn't cover?
+
+---
+
+## Thank you
+
+Notes:
+- Questions and comments are more than welcome
