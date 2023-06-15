@@ -7,6 +7,10 @@
     background: black;
 }
 
+.reveal strong {
+    color: blue;
+}
+
 .reveal pre {
     background: black;
     width: 100%;
