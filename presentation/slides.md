@@ -31,15 +31,12 @@ Notes:
 
 The point of this talk:
 - Building images is easy.  Building images that boot and are usable is a bit harder.
-- We want to restrict what IB can build so that it's hard to build unusable images, but we also want to give users the power to make the choices they need.
+- We want to restrict what users can build so that it's hard to build unusable images, but we also want to give users the power to make the choices they need.
   - These two things are in some ways in opposition to each other.
   - Our solution is to define abstractions that let us define images as configurations of components.  These components inform both the way we implement the image types in code but also how we present them to users.
 - **This talk is about those abstractions/components**, how we define them, how we implement them, and whether they achieve the goal we set out to achieve.
 
 - We want to map the abstractions all the way down to the bits in the image.  It's a direct path from a description like "RHEL 9 Azure image for running containers" down to the components we define in the code.
-
----
-
 
 ---
 
@@ -71,6 +68,7 @@ Notes:
 - This is the rough structure of the image builder stack.  At the top we have user interfaces, like the CLI, cockpit composer (a plugin for cockpit), and the image builder service that runs in console.redhat.com (our hosted service).
 - I'll talk a bit about how osbuild works (the bottom part) but the focus of this talk will be almost entirely on the way we define images, which happens in osbuild-composer (the middle part).
 - I might mention how the concepts discussed here affect the user interfaces.
+TODO: consider adding `images` between osbuild and composer
 
 ---
 
@@ -127,7 +125,7 @@ An osbuild manifest
           "options": {
             "users": {
               "achilleas": {
-                "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC61wMCjOSHwbVb4VfVyl5sn497qW4PsdQ7Ty7aD6wDNZ/QjjULkDV/yW5WjDlDQ7UqFH0Sr7vywjqDizUAqK7zM5FsUKsUXWHWwg/ehKg8j9xKcMv11AkFoUoujtfAujnKODkk58XSA9whPr7qcw3vPrmog680pnMSzf9LC7J6kXfs6lkoKfBh9VnlxusCrw2yg0qI1fHAZBLPx7mW6+me71QZsS6sVz8v8KXyrXsKTdnF50FjzHcK9HXDBtSJS5wA3fkcRYymJe0o6WMWNdgSRVpoSiWaHHmFgdMUJaYoCfhXzyl7LtNb3Q+Sveg+tJK7JaRXBLMUllOlJ6ll5Hod root@localhost"
+                "key": "..."
               }
             }
           }
@@ -426,7 +424,7 @@ Notes:
 - osbuild is a command line utility that takes a manifest and returns one or more filesystem trees.
 - osbuild consumes a manifest, a big json structure that describes some sources (e.g., rpm urls) and a series of pipelines.
 - A pipeline is a series of steps called stages, each of which modifies a filesystem tree in different ways.
-- osbuild makes no guarantees about what the manifest will produce.  It simply and stupidly executes the stages as described and returns the filesystem tree (or trees) that is/are requested on the command line.
+- osbuild makes **no guarantees** about what the manifest will produce.  It simply and stupidly executes the stages as described and returns the filesystem trees that are specified on the command line.
 
 ---
 
@@ -462,7 +460,7 @@ Pipeline: os                         org.osbuild.mkfs.fat
 - org.osbuild.sfdisk: partition a device
 
 Notes:
-- TODO: consider moving this slide one step up, describe some stages, and then show the pipelines and stages explaining how it works.
+TODO: consider moving this slide one step up, describe some stages, and then show the pipelines and stages explaining how it works.
 
 ---
 
@@ -470,14 +468,57 @@ Notes:
 ## Defining image types
 
 Notes:
+- On its own, osbuild isn't very useful.  No one is expected to write manifests by hand.
+- So we provide a library that holds the domain knowledge of what a bootable image of a specific distribution should look like and how to create a manifest that will produce it.
+- These are the base images we define in composer and present to the user.
 
-Refer to the manifests in the previous section to explain how choices affect stages and stage options.
-Perhaps the easiest example to explain is package selection:
-- Distro and Platform (architecture) define a base set of packages (and repositories).
-- Environment adds packages based on where the image will run (bootloaders, cloud tools).
-- Workload adds packages related to what the image will be used for.
+---
 
-Other stages are of course also modified by these choices, so maybe add a couple more examples.
+## Defining image types
+
+All our configurations should be
+- Buildable
+- Usable
+
+Note:
+- Like I mentioned earlier: osbuild makes no guarantees about what it will produce for any given manifest.
+- osbuild-composer on the other hand needs to:
+  - produce the image the user requested,
+  - and the image should be bootable (usable).
+- The easy way to guarantee this is to restrict user choice: the smaller the configuration space, the fewer things we have to think about and test.
+- But the more we restrict user choice, the less useful our project becomes.
+
+---
+
+## Defining image types
+
+1. OS distribution
+2. Hardware architecture
+3. Target environment
+
+Notes:
+- When we talk about the images that we build, we refer to an image file or archive that contains an operating system tree.
+- An **image type** is a predefined image configuration.
+- Ignoring any user customizations, the base configuration needs to specify at the very least the OS distribution, the hardware architecture, and the target environment.
+- For example:
+  - Fedora 38 x86 for azure
+  - RHEL 9 aarch64 for aws
+
+---
+
+## Defining image types
+
+1. OS distribution: Base packages and repositories
+2. Hardware architecture: Package/repository architecture, bootloader, firmware
+3. Target environment: Packages, configurations
+
+Notes:
+- An image type is a configuration of these three choices.
+- Considering the osbuild stages we saw earlier, each choice affects stages and stage options.
+  - The distribution defines a base set of package names and repositories (content sources)
+  - The architecture defines the architecture of those packages (and repositories) as well as extra packages and configurations, like specific firmware, bootloader configs, etc.
+  - The environment adds packages, like cloud agents, and modifies configurations, like firewall rules.
+- It's important that our image definitions abstract away any knowledge of the manifest, pipelines, and stages.
 
 ---
 
@@ -485,12 +526,75 @@ Other stages are of course also modified by these choices, so maybe add a couple
 ## Image definition components
 
 Notes:
-- Distro
-- Platform
-- Environment
-- Workload
+- This is the part of the talk where I describe things we haven't finalised yet in the project, so some things might be a bit more conceptual or could change in the future.
+- We want to define the choices we saw earlier as abstractions in our code but also in conceptually in the way we reason about image definitions and the way we present choices to the user.
 
-How is each of these represented in code and how do they interact with one another.  How do we ensure they don't create broken images.
+---
+
+## Image definition components
+
+1. Distribution
+2. Platform
+3. Environment
+4. Workload
+
+
+Notes:
+- On top of the three choices we've seen already, we add another one that represents what the image is intended for, the workload.
+- Overall we have:
+  - Distro: as before.
+  - Platform: a generalisation of the architecture we saw earlier, which can include variations or more specific choices, like firmware packages for specific devices.
+  - Environment: also as before.
+  - Workload: the intended use of the image, which can be user defined or predefined by the project for common workloads (e.g., a _web server_ workload which contains packages, firewall rules, and sane defaults for running a web service).
+- We can go through a scenario with these components and see how the abstractions have concrete effects on the content and stages for the final image.
+
+---
+
+## Image definition components
+
+1. Distribution: Fedora 38
+    - Repositories: All Fedora 38 repos
+    - Packages: `@core`
+    - Stages: Fedora 38 build environment
+
+Notes:
+- We start by selecting a distribution that gives us a set of repositories and packages.
+
+---
+
+## Image definition components
+
+2. Architecture: x86_64
+    - Repositories: Fedora 38 **x86_64**
+    - Packages: `@core` + `grub2-efi-x64` + `shim-x64`
+    - Stages: Fedora 38 build environment + grub2 config + grub2 install
+
+Notes:
+- Then we select the architecture which narrows down the repositories and adds boot-related packages as well as extra stages to configure and install the bootloader
+
+---
+
+## Image definition components
+
+3. Environment: AWS EC2
+    - Repositories: Fedora 38 **x86_64**
+    - Packages: `@core` + `grub2-efi-x64` + `shim-x64` + `@Fedora Cloud Server` + `cloud-init`
+    - Stages: build environment + grub2 config + grub2 install + systemd (enable cloud-init)
+
+Notes:
+- Selecting the AWS EC2 environment adds the cloud server packages and a systemd stage to enable the cloud-init service on boot, which takes care of resizing partitions and creating users on first boot through the AWS cloud console.
+
+---
+
+## Image definition components
+
+4. Workload: Web server
+    - Repositories: Fedora 38 **x86_64**
+    - Packages: `@core` + `grub2-efi-x64` + `shim-x64` + `@Fedora Cloud Server` + `cloud-init` + `nginx`
+    - Stages: build environment + grub2 config + grub2 install + systemd (enable cloud-init) + nginx config
+
+Notes:
+- And finally, selecting the web server workload adds a web server, nginx, and the appropriate stage to configure it if necessary.
 
 ---
 
@@ -499,3 +603,27 @@ How is each of these represented in code and how do they interact with one anoth
 
 Notes:
 - What choices do we give users and how do these choices map to the components we defined.
+
+---
+
+## User experience
+
+Current state
+1. Select distribution
+2. Select image type: `guest-image`, `aws`, `azure`, `gcp`, ...
+
+Notes:
+- Up until now, the experience has been pretty straightforward
+- Users can select a distribution version, build x86 (on the service) or the host architecture (on prem), and then select an image type.
+
+---
+
+## User experience
+
+Expose all the components
+
+Notes:
+- But why not just expose all the components instead?
+- Meaning: Select a distribution version (like now), select an environment
+
+---
