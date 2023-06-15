@@ -309,14 +309,6 @@
                   }
                 },
                 {
-                  "id": "sha256:6170bb84006ad1d74202125a21308b15be0b36ec95e9dbb6552aa35026e966ea",
-                  "options": {
-                    "metadata": {
-                      "rpm.check_gpg": true
-                    }
-                  }
-                },
-                {
                   "id": "sha256:60ed241ec381a23d03fac733a72132dbdc4ba04c412add78bfc67f1b9f1b4daa",
                   "options": {
                     "metadata": {
@@ -414,14 +406,6 @@
                 },
                 {
                   "id": "sha256:9b093be8a99bfbae03c2f3dd5435fc9508003f7ef21e4280ff72fe814c1d794e",
-                  "options": {
-                    "metadata": {
-                      "rpm.check_gpg": true
-                    }
-                  }
-                },
-                {
-                  "id": "sha256:8068b025fe7051320d35257c9ef8aef2dbdcd2adf5a5e3af356a49127173c2ec",
                   "options": {
                     "metadata": {
                       "rpm.check_gpg": true
@@ -709,14 +693,6 @@
                   }
                 },
                 {
-                  "id": "sha256:7df7f844d1f384d72a75458a56d9613573fa418f865e9461d4b3e87c27e3842a",
-                  "options": {
-                    "metadata": {
-                      "rpm.check_gpg": true
-                    }
-                  }
-                },
-                {
                   "id": "sha256:c5c409a2d5f8890eeab48b27b9f4f02925a6bbabeb21ee5e45694c7c9009f037",
                   "options": {
                     "metadata": {
@@ -814,22 +790,6 @@
                 },
                 {
                   "id": "sha256:6ce309d9fd208bfff831981ee4298ccb25fa72363cb7464f1da03b8214d4351f",
-                  "options": {
-                    "metadata": {
-                      "rpm.check_gpg": true
-                    }
-                  }
-                },
-                {
-                  "id": "sha256:605d6710ba42104ce0434bb37b0ca9a922a8392c14175bc782f8acb70b94c3aa",
-                  "options": {
-                    "metadata": {
-                      "rpm.check_gpg": true
-                    }
-                  }
-                },
-                {
-                  "id": "sha256:2f7ccfe2164b0063349128dd1fba018fe76a679f6ecfa8306f04dc5a5db341c7",
                   "options": {
                     "metadata": {
                       "rpm.check_gpg": true
@@ -1197,22 +1157,6 @@
                   }
                 },
                 {
-                  "id": "sha256:f54340fec047cc359a6a164a1ce88d0d7ffcd8f7d6334b50dc5b3d234e3a19ac",
-                  "options": {
-                    "metadata": {
-                      "rpm.check_gpg": true
-                    }
-                  }
-                },
-                {
-                  "id": "sha256:05571a68f7dabff1ba50c42145f51ed4011c70d77ea9b4879f6759ffe837e215",
-                  "options": {
-                    "metadata": {
-                      "rpm.check_gpg": true
-                    }
-                  }
-                },
-                {
                   "id": "sha256:1d17f327a83ccb5ec42f412c78ae6aaf787bd46f10645b65af43f6f5ae9d8c15",
                   "options": {
                     "metadata": {
@@ -1382,14 +1326,6 @@
                 },
                 {
                   "id": "sha256:2656094a2199cb34ffd66c00051e93a15b742bc618bf02b1f5886ea3560e8a6d",
-                  "options": {
-                    "metadata": {
-                      "rpm.check_gpg": true
-                    }
-                  }
-                },
-                {
-                  "id": "sha256:840bf28d52bc9b1b0f90e415f507fdb9e875dc52c3153425ecc112a0735fc757",
                   "options": {
                     "metadata": {
                       "rpm.check_gpg": true
@@ -5130,16 +5066,6 @@
           }
         },
         {
-          "type": "org.osbuild.users",
-          "options": {
-            "users": {
-              "redhat": {
-                "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC61wMCjOSHwbVb4VfVyl5sn497qW4PsdQ7Ty7aD6wDNZ/QjjULkDV/yW5WjDlDQ7UqFH0Sr7vywjqDizUAqK7zM5FsUKsUXWHWwg/ehKg8j9xKcMv11AkFoUoujtfAujnKODkk58XSA9whPr7qcw3vPrmog680pnMSzf9LC7J6kXfs6lkoKfBh9VnlxusCrw2yg0qI1fHAZBLPx7mW6+me71QZsS6sVz8v8KXyrXsKTdnF50FjzHcK9HXDBtSJS5wA3fkcRYymJe0o6WMWNdgSRVpoSiWaHHmFgdMUJaYoCfhXzyl7LtNb3Q+Sveg+tJK7JaRXBLMUllOlJ6ll5Hod root@localhost"
-              }
-            }
-          }
-        },
-        {
           "type": "org.osbuild.fstab",
           "options": {
             "filesystems": [
@@ -5190,7 +5116,8 @@
               "cloud-init.service",
               "cloud-config.service",
               "cloud-final.service",
-              "cloud-init-local.service"
+              "cloud-init-local.service",
+              "cloud-init.service"
             ],
             "default_target": "multi-user.target"
           }
@@ -5210,7 +5137,7 @@
         {
           "type": "org.osbuild.truncate",
           "options": {
-            "filename": "disk.img",
+            "filename": "image.raw",
             "size": "5368709120"
           }
         },
@@ -5251,7 +5178,7 @@
             "device": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "lock": true
               }
             }
@@ -5266,7 +5193,7 @@
             "device": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "start": 4096,
                 "size": 409600,
                 "lock": true
@@ -5284,7 +5211,7 @@
             "device": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "start": 413696,
                 "size": 1024000,
                 "lock": true
@@ -5302,7 +5229,7 @@
             "device": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "start": 1437696,
                 "size": 9048031,
                 "lock": true
@@ -5333,7 +5260,7 @@
             "boot": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "start": 413696,
                 "size": 1024000
               }
@@ -5341,7 +5268,7 @@
             "boot.efi": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "start": 4096,
                 "size": 409600
               }
@@ -5349,7 +5276,7 @@
             "root": {
               "type": "org.osbuild.loopback",
               "options": {
-                "filename": "disk.img",
+                "filename": "image.raw",
                 "start": 1437696,
                 "size": 9048031
               }
@@ -5379,7 +5306,7 @@
         {
           "type": "org.osbuild.grub2.inst",
           "options": {
-            "filename": "disk.img",
+            "filename": "image.raw",
             "platform": "i386-pc",
             "location": 2048,
             "core": {
@@ -5392,33 +5319,6 @@
               "partlabel": "gpt",
               "number": 2,
               "path": "/grub2"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "qcow2",
-      "build": "name:build",
-      "stages": [
-        {
-          "type": "org.osbuild.qemu",
-          "inputs": {
-            "image": {
-              "type": "org.osbuild.files",
-              "origin": "org.osbuild.pipeline",
-              "references": {
-                "name:image": {
-                  "file": "disk.img"
-                }
-              }
-            }
-          },
-          "options": {
-            "filename": "disk.qcow2",
-            "format": {
-              "type": "qcow2",
-              "compat": "1.1"
             }
           }
         }
@@ -6082,9 +5982,6 @@
         "sha256:805da27b46f0d8cca2cf21a30e52401ae61ca472ae7c2d096de1cfb4b7a0d15c": {
           "url": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-x86_64-fedora-20230413/Packages/l/libusb1-1.0.26-2.fc38.x86_64.rpm"
         },
-        "sha256:8068b025fe7051320d35257c9ef8aef2dbdcd2adf5a5e3af356a49127173c2ec": {
-          "url": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-x86_64-fedora-20230413/Packages/l/libaio-0.3.111-15.fc38.x86_64.rpm"
-        },
         "sha256:8079443881e764cece2f8f6789b39ebbe43226cde61675bdfae5a5a18a439b5f": {
           "url": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-x86_64-fedora-20230413/Packages/l/libbpf-1.1.0-2.fc38.x86_64.rpm"
         },
@@ -6102,9 +5999,6 @@
         },
         "sha256:83bb8576a018ae028ff1434c32e1f3dfab66a781e1af9057862a2d7f3d725f58": {
           "url": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-x86_64-fedora-20230413/Packages/f/file-libs-5.44-3.fc38.x86_64.rpm"
-        },
-        "sha256:840bf28d52bc9b1b0f90e415f507fdb9e875dc52c3153425ecc112a0735fc757": {
-          "url": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-x86_64-updates-released-20230601/Packages/q/qemu-img-7.2.1-2.fc38.x86_64.rpm"
         },
         "sha256:8425c015817bd0af8bce0ac23190d02b51798fbd3d588de935690988348d72b6": {
           "url": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-x86_64-updates-released-20230601/Packages/k/kernel-core-6.3.4-201.fc38.x86_64.rpm"
@@ -6723,9 +6617,6 @@
         },
         "sha256:f2cd7708c8796f59814fff5da90adc484bf50c39b0f46deb343e5a1462f452bd": {
           "url": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-x86_64-updates-released-20230601/Packages/p/python3-libdnf-0.70.1-1.fc38.x86_64.rpm"
-        },
-        "sha256:f54340fec047cc359a6a164a1ce88d0d7ffcd8f7d6334b50dc5b3d234e3a19ac": {
-          "url": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-x86_64-updates-released-20230601/Packages/f/fuse3-libs-3.14.1-1.fc38.x86_64.rpm"
         },
         "sha256:f606d5be4cefddabe67be0cefac437f15295005d24f6695d7d6e7a23b65d0c67": {
           "url": "https://rpmrepo.osbuild.org/v2/mirror/public/f38/f38-x86_64-fedora-20230413/Packages/l/libXrender-0.9.11-2.fc38.x86_64.rpm"

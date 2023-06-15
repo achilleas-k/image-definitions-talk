@@ -1,19 +1,19 @@
-Pipeline: build
+Manifest schema version: 2
+build
   org.osbuild.rpm
   org.osbuild.selinux
-Pipeline: os
+os
   org.osbuild.kernel-cmdline
   org.osbuild.rpm
   org.osbuild.fix-bls
   org.osbuild.locale
   org.osbuild.hostname
   org.osbuild.timezone
-  org.osbuild.users
   org.osbuild.fstab
   org.osbuild.grub2
   org.osbuild.systemd
   org.osbuild.selinux
-Pipeline: image
+image
   org.osbuild.truncate
   org.osbuild.sfdisk
   org.osbuild.mkfs.fat
@@ -21,5 +21,3 @@ Pipeline: image
   org.osbuild.mkfs.ext4
   org.osbuild.copy
   org.osbuild.grub2.inst
-Pipeline: qcow2
-  org.osbuild.qemu
