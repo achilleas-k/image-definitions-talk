@@ -65,10 +65,17 @@ Notes:
 ```
 
 Notes:
+- TODO: Remove this or move to the end
 - This is the rough structure of the image builder stack.  At the top we have user interfaces, like the CLI, cockpit composer (a plugin for cockpit), and the image builder service that runs in console.redhat.com (our hosted service).
 - I'll talk a bit about how osbuild works (the bottom part) but the focus of this talk will be almost entirely on the way we define images, which happens in osbuild-composer (the middle part).
 - I might mention how the concepts discussed here affect the user interfaces.
 TODO: consider adding `images` between osbuild and composer
+
+---
+
+## osbuild
+
+SCREENSHOT OF IB WITH NGINX (example)
 
 ---
 
@@ -421,10 +428,11 @@ An osbuild manifest
 
 
 Notes:
+TODO: Change the manifest to be F38 x86 AWS nginx (our example)
 - osbuild is a command line utility that takes a manifest and returns one or more filesystem trees.
 - osbuild consumes a manifest, a big json structure that describes some sources (e.g., rpm urls) and a series of pipelines.
 - A pipeline is a series of steps called stages, each of which modifies a filesystem tree in different ways.
-- osbuild makes **no guarantees** about what the manifest will produce.  It simply and stupidly executes the stages as described and returns the filesystem trees that are specified on the command line.
+- osbuild has no knowledge of distributions or workloads.  It simply and stupidly executes the stages as described and returns the filesystem trees that are specified on the command line.
 
 ---
 
@@ -450,6 +458,10 @@ Pipeline: os                         org.osbuild.mkfs.fat
   org.osbuild.selinux
 ```
 
+Notes:
+- This is what it looks like simplified and the stages are like this.
+TODO: Change the manifest to be F38 x86 AWS nginx (our example)
+
 ---
 
 ## osbuild
@@ -460,7 +472,7 @@ Pipeline: os                         org.osbuild.mkfs.fat
 - org.osbuild.sfdisk: partition a device
 
 Notes:
-TODO: consider moving this slide one step up, describe some stages, and then show the pipelines and stages explaining how it works.
+TODO: add the important stages that we will discuss in the example later (grub2 cloud-init etc)
 
 ---
 
@@ -627,3 +639,13 @@ Notes:
 - Meaning: Select a distribution version (like now), select an environment
 
 ---
+
+Notes:
+Feedback from initial demo:
+    - The example was the most entertaining part
+    - Use the example throughout the talk
+    - At the end: Call to action
+        - This his how we WANT TO think about this stuff.  What do you think???  Does this make sense?  Is there something that we missed?
+    - Go low to high on specific example
+    - Start with screenshot of cockpit composer with the F38 web server example
+    - Say "We have high level tools that are available for the users", but don't mention the components
