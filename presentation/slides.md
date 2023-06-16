@@ -492,7 +492,7 @@ Note:
 
   \+
 
-user customizations
+🎛️ user customizations
 
 Notes:
 - When we talk about the images that we build, we refer to an image file or archive that contains an operating system tree.
@@ -646,7 +646,7 @@ Notes:
 
   \+
 
-user customizations
+🎛️ user customizations
 
 Notes:
 - Up until now, the experience has been pretty straightforward
@@ -659,6 +659,10 @@ Notes:
 ## User experience
 
 Expose all the components
+- 🎛️ Distribution
+- 🎛️ Platform
+- 🎛️ Environment
+- 🎛️ Workload
 
 Notes:
 - So why not just expose all the components instead?
@@ -682,6 +686,9 @@ Notes:
 ---
 
 ## Thank you
+
+- https://osbuild.org
+- https://github.com/osbuild/
 
 Notes:
 - Questions and comments are more than welcome
